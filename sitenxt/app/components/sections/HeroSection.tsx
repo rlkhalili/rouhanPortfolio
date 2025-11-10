@@ -42,7 +42,7 @@ export function HeroSection({ hero }: HeroSectionProps) {
             className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-semibold text-zinc-50 transition hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900"
             href={`mailto:${hero.contactEmail}`}
           >
-            Start a project
+            Get in touch!
           </a>
           <a
             className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-semibold text-zinc-800 transition hover:border-zinc-900 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-200 dark:hover:text-white"

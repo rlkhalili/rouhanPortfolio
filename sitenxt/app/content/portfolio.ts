@@ -27,7 +27,8 @@ export type ListContent = string[];
 export interface NextStepsCta {
   label: string;
   href: string;
-  variant: "primary" | "secondary";
+  variant: "primary" | "secondary" | "icon";
+  icon?: "github" | "linkedin";
 }
 
 export interface NextStepsContent {
@@ -48,13 +49,13 @@ export const navItems: NavItem[] = [
 ];
 
 export const heroContent: HeroContent = {
-  eyebrow: "Software developer, Computer Engineering technologist",
+  eyebrow: "Software developer, Computer Engineering Technologist",
   headline:
-    "I build useful web tools and experiments for small teams, independent creators, and anyone chasing an idea worth building.",
+    "Rouhan Khalili",
   blurb:
     "I'm a software developer who enjoys building the kind of tools that make ideas feel real. My work often blends scraping, APIs, and automation with interfaces that stay clear and practical.",
   availability: "Currently open to freelance, contract, or full-time roles.",
-  contactEmail: "hello@example.com",
+  contactEmail: "khalili.rouhan@gmail.com",
   resumeUrl: "#",
   portraitAlt: "Portrait of the developer",
 };
@@ -64,6 +65,7 @@ export const focusAreas: ListContent = [
   "API design, integration, and scraping",
   "Backend scripting and small-scale infrastructure tinkering",
   "Web development for creators and indie tools",
+  "Microcontroller programming and embedded systems",
 ];
 
 export const projectPreferences: ListContent = [
@@ -102,7 +104,7 @@ export const projects: Project[] = [
     title: "Product Data Scraper Suite",
     status: "Client project",
     summary:
-      "Automated data collection tools for a small Amazon retailer, combining Puppeteer, Selenium, and custom HTTP scrapers to surface supplier listings and hidden inventory data.",
+      "Automated data collection tools for a Amazon retailer, combining Puppeteer, Selenium, and custom HTTP scrapers to surface supplier listings and hidden inventory data.",
     contribution:
       "Designed a set of schedulable scrapers tailored to each wholesaler, normalized their output, and handed the client a browsable dataset plus spreadsheet export.",
     learning:
@@ -142,7 +144,8 @@ export const nextStepsContent: NextStepsContent = {
   description:
     "I love teaming up early, building a scrappy version fast, and iterating until the thing is both useful and expressive.",
   ctas: [
-    { label: "Email me", href: "mailto:hello@example.com", variant: "primary" },
-    { label: "Book a call", href: "#", variant: "secondary" },
+    { label: "Email me", href: "mailto:khalili.rouhan@gmail.com", variant: "primary" },
+    { label: "GitHub", href: "https://github.com/rlkhalili", variant: "icon", icon: "github" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/rouhan-khalili-45b3b9155/", variant: "icon", icon: "linkedin" },
   ],
 };
