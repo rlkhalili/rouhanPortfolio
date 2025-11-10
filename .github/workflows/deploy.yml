@@ -14,14 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NEXT_PUBLIC_BASE_PATH: rouhanPortfolio   # repo name or empty if i choose rouhan.github.io or sth
+  NEXT_PUBLIC_BASE_PATH: rouhanPortfolio   # drop/adjust if you change hosting path
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: rouhanPortfolio   
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,7 +29,7 @@ jobs:
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: rouhanPortfolio/out
+          path: out
   deploy:
     needs: build
     runs-on: ubuntu-latest
