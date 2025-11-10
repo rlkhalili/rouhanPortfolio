@@ -44,15 +44,19 @@ export function HeroSection({ hero }: HeroSectionProps) {
           <figcaption className="sr-only">{hero.portraitAlt}</figcaption>
         </figure>
 
-        <h1 className="mt-2 text-xl font-semibold leading-snug text-zinc-900 sm:text-2xl dark:text-white">
-          {hero.headline}
-        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <h1 className="text-xl font-semibold leading-snug text-zinc-900 sm:text-2xl dark:text-white">
+            {hero.headline}
+          </h1>
+          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:text-zinc-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            {hero.location}
+          </div>
+        </div>
 
         <p className="mt-2 text-sm text-zinc-600 sm:text-base dark:text-zinc-300">{hero.blurb}</p>
 
-        <p className="mt-2 text-xs font-medium text-zinc-500 sm:text-sm dark:text-zinc-400">
-          {hero.availability}
-        </p>
+        <p className="mt-2 text-xs font-medium text-zinc-500 sm:text-sm dark:text-zinc-400">{hero.availability}</p>
 
         <div className="mt-4 flex flex-wrap gap-3 sm:clear-left">
           <a

@@ -15,6 +15,7 @@ export interface Project {
 export interface HeroContent {
   eyebrow: string;
   headline: string;
+  location: string;
   blurb: string;
   availability: string;
   contactEmail: string;
@@ -52,6 +53,7 @@ export const heroContent: HeroContent = {
   eyebrow: "Software developer, Computer Engineering Technologist",
   headline:
     "Rouhan Khalili",
+  location: "Toronto, Canada",
   blurb:
     "I'm a software developer who enjoys building the kind of tools that make ideas feel real. My work often blends scraping, APIs, and automation with interfaces that stay clear and practical.",
   availability: "Currently open to freelance, contract, or full-time roles.",

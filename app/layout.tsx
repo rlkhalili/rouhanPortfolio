@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Automation-first Developer Portfolio",
+  title: "Rouhan Khalili",
   description:
-    "Portfolio site for a scraping, automation, and indie tools developer showcasing projects, capabilities, and next steps.",
+    "Portfolio site for a scraping, automation, and indie tool developer based in Toronto, Canada.",
 };
 
 export default function RootLayout({
