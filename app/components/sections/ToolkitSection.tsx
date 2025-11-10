@@ -4,6 +4,8 @@ interface ToolkitSectionProps {
   tools: ListContent;
 }
 
+
+
 export function ToolkitSection({ tools }: ToolkitSectionProps) {
   return (
     <article

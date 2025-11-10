@@ -27,6 +27,18 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "typescript": "^5"
+  },
+  "browserslist": {
+    "production": [
+      "defaults and supports es6-module",
+      "not safari < 15",
+      "not ios_saf < 15"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
   
 }
