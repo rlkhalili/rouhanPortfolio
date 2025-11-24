@@ -123,15 +123,15 @@ export const projects: Project[] = [
     tech: "Python • Tkinter/PyQt • Whisper",
   },
   {
-    title: "Unofficial API & Data Explorer",
+    title: "Fashion Product Aggregator",
     status: "In progress",
     summary:
-      "Exploring how to repackage semi-public data from complex platforms (think LinkedIn) into a structured REST API plus interactive viewer.",
+      "Scraper aggregating product listing from a growing list of fashion retailers in a structured REST API plus interactive viewer.",
     contribution:
-      "Experimenting with scraping and request interception tactics, then shaping the results into a searchable dataset with a simple front-end explorer.",
+      "Built an automated pipeline with scraping and request interception tactics, funneling normalized data into a single schema stored in Postgres on Supabase, hooked to React frontend.",
     learning:
-      "A sandbox for turning messy ecosystems into something more intentional while respecting privacy boundaries.",
-    tech: "Python • FastAPI • Requests/Playwright • SQLite/PostgreSQL",
+      "Playing with different scraping strategies, confronting diversity in robustness, and quickly iterating on a ",
+    tech: "Typescript • Node.js • Postgres/Supabase • Drizzle ORM • React",
   },
 ];
 
