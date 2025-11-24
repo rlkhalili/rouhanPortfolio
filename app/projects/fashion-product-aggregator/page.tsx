@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { projectDetails } from "@/app/content/portfolio";
 
@@ -21,16 +20,9 @@ type FashionProduct = {
   in_stock: boolean;
 };
 
-function getBrowserSupabaseClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+type ProductsResponse = { products?: FashionProduct[]; error?: string };
 
-  if (!url || !anonKey) return null;
-
-  return createClient(url, anonKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
+const PRODUCTS_ENDPOINT = "/.netlify/functions/fashion-products";
 
 function formatPrice(price: number | null, label: string | null) {
   if (label) return label;
@@ -101,6 +93,28 @@ function parseSwatches(raw: unknown): SwatchEntry[] {
     .filter((item): item is SwatchEntry => Boolean(item));
 }
 
+async function fetchProductsFromApi(signal?: AbortSignal): Promise<ProductsResponse> {
+  try {
+    const response = await fetch(PRODUCTS_ENDPOINT, { signal, cache: "no-store" });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      return { error: `Product feed unavailable (${response.status}). ${detail || "Try again shortly."}` };
+    }
+
+    const payload = (await response.json()) as ProductsResponse;
+
+    if (!payload || !Array.isArray(payload.products)) {
+      return { error: payload?.error ?? "Unexpected response from product feed." };
+    }
+
+    return { products: payload.products, error: payload.error };
+  } catch (err) {
+    if (signal?.aborted) return {};
+    return { error: err instanceof Error ? err.message : "Unable to reach the product feed." };
+  }
+}
+
 export default function FashionProductAggregatorPage() {
   const [products, setProducts] = useState<FashionProduct[]>([]);
   const [error, setError] = useState<string | undefined>();
@@ -121,50 +135,35 @@ export default function FashionProductAggregatorPage() {
     "Load the page → scraper runs → rows land in Supabase Postgres → UI refreshes with the new data. It is the end-to-end loop I would own on the job.";
 
   useEffect(() => {
-    const supabase = getBrowserSupabaseClient();
-
-    if (!supabase) {
-      setError(
-        "Supabase public environment variables are missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
-      );
-      setLoading(false);
-      return;
-    }
-
     let isMounted = true;
+    const controller = new AbortController();
 
-    async function loadProducts(client: SupabaseClient) {
-      try {
-        const { data, error } = await client
-          .from("products")
-          .select(
-            "article_code, link, price_numeric, price_label, image_model_alt, image_model_src, thumbnail_src, swatches, sizes, created_at, updated_at, in_stock",
-          )
-          .order("updated_at", { ascending: false })
-          .limit(50);
+    async function loadProducts() {
+      const { products: latest, error: fetchError } = await fetchProductsFromApi(controller.signal);
 
-        if (!isMounted) return;
+      if (!isMounted) return;
 
-        if (error) {
-          setError(error.message);
-          setProducts([]);
-        } else {
-          setProducts(data ?? []);
-          setError(undefined);
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        setError(err instanceof Error ? err.message : "Unable to reach Supabase.");
+      if (fetchError) {
+        setError(fetchError);
         setProducts([]);
-      } finally {
-        if (isMounted) setLoading(false);
+      } else {
+        setProducts(latest ?? []);
+        setError(undefined);
       }
+
+      if (isMounted) setLoading(false);
     }
 
-    loadProducts(supabase);
+    loadProducts().catch((err) => {
+      if (!isMounted || controller.signal.aborted) return;
+      setError(err instanceof Error ? err.message : "Unable to reach the product feed.");
+      setProducts([]);
+      setLoading(false);
+    });
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
   }, []);
 
@@ -204,8 +203,12 @@ export default function FashionProductAggregatorPage() {
             <p className="font-semibold">Unable to load Supabase data.</p>
             <p className="mt-1">{error}</p>
             <p className="mt-2 text-xs text-red-700 dark:text-red-200">
-              Confirm NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your environment and that the{" "}
-              <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">products</code> table exists.
+              Confirm the Netlify function{" "}
+              <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">/.netlify/functions/fashion-products</code>{" "}
+              is deployed and that <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">SUPABASE_URL</code>{" "}
+              and <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">SUPABASE_ANON_KEY</code> are set in
+              the environment along with the{" "}
+              <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">products</code> table.
             </p>
           </div>
         )}
