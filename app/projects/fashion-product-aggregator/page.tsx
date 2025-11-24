@@ -1,9 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getSupabaseClient } from "@/app/lib/supabaseClient";
 import { projectDetails } from "@/app/content/portfolio";
-
-export const revalidate = 0;
 
 type FashionProduct = {
   article_code: string;
@@ -20,26 +21,15 @@ type FashionProduct = {
   in_stock: boolean;
 };
 
-async function fetchFashionProducts(): Promise<{ products: FashionProduct[]; error?: string }> {
-  try {
-    const supabase = getSupabaseClient();
+function getBrowserSupabaseClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const { data, error } = await supabase
-      .from("products")
-      .select(
-        "article_code, link, price_numeric, price_label, image_model_alt, image_model_src, thumbnail_src, swatches, sizes, created_at, updated_at, in_stock",
-      )
-      .order("updated_at", { ascending: false })
-      .limit(50);
+  if (!url || !anonKey) return null;
 
-    if (error) {
-      return { products: [], error: error.message };
-    }
-
-    return { products: data ?? [] };
-  } catch (err) {
-    return { products: [], error: err instanceof Error ? err.message : "Unable to reach Supabase." };
-  }
+  return createClient(url, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 function formatPrice(price: number | null, label: string | null) {
@@ -111,8 +101,11 @@ function parseSwatches(raw: unknown): SwatchEntry[] {
     .filter((item): item is SwatchEntry => Boolean(item));
 }
 
-export default async function FashionProductAggregatorPage() {
-  const { products, error } = await fetchFashionProducts();
+export default function FashionProductAggregatorPage() {
+  const [products, setProducts] = useState<FashionProduct[]>([]);
+  const [error, setError] = useState<string | undefined>();
+  const [loading, setLoading] = useState(true);
+
   const content = projectDetails.find((detail) => detail.slug === "fashion-product-aggregator");
   const eyebrow = content?.eyebrow ?? "Project";
   const title = content?.title ?? "Fashion Product Aggregator";
@@ -126,6 +119,54 @@ export default async function FashionProductAggregatorPage() {
   const why =
     content?.why ??
     "Load the page → scraper runs → rows land in Supabase Postgres → UI refreshes with the new data. It is the end-to-end loop I would own on the job.";
+
+  useEffect(() => {
+    const supabase = getBrowserSupabaseClient();
+
+    if (!supabase) {
+      setError(
+        "Supabase public environment variables are missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadProducts() {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(
+            "article_code, link, price_numeric, price_label, image_model_alt, image_model_src, thumbnail_src, swatches, sizes, created_at, updated_at, in_stock",
+          )
+          .order("updated_at", { ascending: false })
+          .limit(50);
+
+        if (!isMounted) return;
+
+        if (error) {
+          setError(error.message);
+          setProducts([]);
+        } else {
+          setProducts(data ?? []);
+          setError(undefined);
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : "Unable to reach Supabase.");
+        setProducts([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 antialiased dark:bg-black dark:text-zinc-100">
@@ -163,7 +204,7 @@ export default async function FashionProductAggregatorPage() {
             <p className="font-semibold">Unable to load Supabase data.</p>
             <p className="mt-1">{error}</p>
             <p className="mt-2 text-xs text-red-700 dark:text-red-200">
-              Confirm SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in your environment and that the{" "}
+              Confirm NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your environment and that the{" "}
               <code className="rounded bg-red-900/30 px-1 py-0.5 text-[0.75rem]">products</code> table exists.
             </p>
           </div>
@@ -173,10 +214,16 @@ export default async function FashionProductAggregatorPage() {
           <div className="rounded-2xl border border-zinc-200 bg-white/90 p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Latest products</p>
-              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Showing {products.length} rows</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+                {loading ? "Loading..." : `Showing ${products.length} rows`}
+              </p>
             </div>
 
-            {products.length === 0 ? (
+            {loading ? (
+              <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+                Loading latest products from Supabase...
+              </p>
+            ) : products.length === 0 ? (
               <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
                 No rows returned yet. Once the scraper pushes data to Supabase, the latest 50 results will appear here.
               </p>
