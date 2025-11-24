@@ -133,9 +133,9 @@ export default function FashionProductAggregatorPage() {
 
     let isMounted = true;
 
-    async function loadProducts() {
+    async function loadProducts(client: SupabaseClient) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from("products")
           .select(
             "article_code, link, price_numeric, price_label, image_model_alt, image_model_src, thumbnail_src, swatches, sizes, created_at, updated_at, in_stock",
@@ -161,7 +161,7 @@ export default function FashionProductAggregatorPage() {
       }
     }
 
-    loadProducts();
+    loadProducts(supabase);
 
     return () => {
       isMounted = false;
