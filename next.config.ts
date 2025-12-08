@@ -2,8 +2,10 @@ import type { NextConfig } from "next";
 
 // sitenxt/next.config.ts
 const repoBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const outputMode = process.env.NEXT_OUTPUT === "export" ? "export" : undefined;
+
 const nextConfig: NextConfig = {
-  output: "export",
+  output: outputMode,
   basePath: repoBase ? `/${repoBase}` : undefined,
   assetPrefix: repoBase ? `/${repoBase}/` : undefined,
   images: { unoptimized: true },
@@ -11,4 +13,3 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 };
 export default nextConfig;
-

@@ -1,76 +1,58 @@
 import { createClient } from "@supabase/supabase-js";
-
-type HandlerResponse = {
-  statusCode: number;
-  headers?: Record<string, string>;
-  body: string;
-};
-
-type HandlerEvent = {
-  queryStringParameters?: Record<string, string | undefined>;
-};
-
-const jsonHeaders = {
-  "Content-Type": "application/json",
-  "Cache-Control": "no-store",
-};
+import { NextResponse, type NextRequest } from "next/server";
 
 const productColumns =
   "articleCode, pdpUrl, title, category, regularPrice, redPrice, yellowPrice, imageProductAlt, imageProductSrc, imageModelAlt, imageModelSrc, swatches, galleryImages, videoFallbackImage, productColor, sizes, prices, createdAt, updatedAt";
+
+// keep this route dynamic for nextjs dev/export to avoid static export errors
+export const dynamic = "force-dynamic";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 200;
 const tableName = process.env["SUPABASE_TABLE"] ?? "hm";
 
-const sortColumns: Record<string, string> = {
-  updatedat: "updatedAt",
-  "updated_at": "updatedAt",
-  createdat: "createdAt",
-  "created_at": "createdAt",
-};
 
 
-function parseLimit(raw: string | undefined) {
+function parseLimit(raw: string | null) {
   const parsed = Number(raw);
   if (!Number.isFinite(parsed)) return DEFAULT_LIMIT;
   return Math.min(Math.max(Math.floor(parsed), 1), MAX_LIMIT);
 }
 
-
-function parsePage(raw: string | undefined) {
+function parsePage(raw: string | null) {
   const parsed = Number(raw);
   if (!Number.isFinite(parsed)) return 1;
   return Math.max(Math.floor(parsed), 1);
 }
 
-
-function parseList(raw: string | undefined) {
+function parseList(raw: string | null) {
   if (!raw) return [];
   return raw
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(0, 20);
+  .slice(0, 20);
 }
 
-
-function parseSearch(raw: string | undefined) {
+function parseSearch(raw: string | null) {
   if (!raw) return "";
   const cleaned = raw.replace(/[%_]/g, "").trim();
   return cleaned.slice(0, 120);
 }
 
-function parseBoolean(raw: string | undefined) {
+function parseBoolean(raw: string | null) {
   return raw?.toLowerCase() === "true";
 }
 
-function parseSort(raw: string | undefined) {
-  if (!raw) return sortColumns.updatedat;
+function parseSort(raw: string | null) {
+  if (!raw) return "updatedAt";
   const normalized = raw.toLowerCase();
-  return sortColumns[normalized] ?? sortColumns.updatedat;
+  if (normalized === "created_at" || normalized === "createdat") return "createdAt";
+  if (normalized === "updated_at" || normalized === "updatedat") return "updatedAt";
+  return "updatedAt";
 }
 
-function parseDirection(raw: string | undefined): "asc" | "desc" {
+function parseDirection(raw: string | null): "asc" | "desc" {
   return raw?.toLowerCase() === "asc" ? "asc" : "desc";
 }
 
@@ -87,20 +69,19 @@ function getSupabaseCredentials() {
   return { url, key };
 }
 
-
-export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => {
+export async function GET(request: NextRequest) {
   try {
     const { url, key } = getSupabaseCredentials();
     const client = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 
-    const limit = parseLimit(event.queryStringParameters?.limit);
-    const page = parsePage(event.queryStringParameters?.page);
-    const sortColumn = parseSort(event.queryStringParameters?.sort);
-    const direction = parseDirection(event.queryStringParameters?.direction);
-    const search = parseSearch(event.queryStringParameters?.search);
-    const categories = parseList(event.queryStringParameters?.categories);
-    const colors = parseList(event.queryStringParameters?.colors);
-    const saleOnly = parseBoolean(event.queryStringParameters?.saleOnly);
+    const limit = parseLimit(request.nextUrl.searchParams.get("limit"));
+    const page = parsePage(request.nextUrl.searchParams.get("page"));
+    const sortColumn = parseSort(request.nextUrl.searchParams.get("sort"));
+    const direction = parseDirection(request.nextUrl.searchParams.get("direction"));
+    const search = parseSearch(request.nextUrl.searchParams.get("search"));
+    const categories = parseList(request.nextUrl.searchParams.get("categories"));
+    const colors = parseList(request.nextUrl.searchParams.get("colors"));
+    const saleOnly = parseBoolean(request.nextUrl.searchParams.get("saleOnly"));
     const rangeFrom = (page - 1) * limit;
     const rangeTo = rangeFrom + limit - 1;
 
@@ -110,10 +91,10 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       query = query.in("category", categories);
     }
 
-  if (search) {
-    const pattern = `%${search}%`;
-    query = query.or(`title.ilike.${pattern},imageModelAlt.ilike.${pattern}`);
-  }
+    if (search) {
+      const pattern = `%${search}%`;
+      query = query.or(`title.ilike.${pattern},imageModelAlt.ilike.${pattern}`);
+    }
 
   if (saleOnly) {
     query = query.or("redPrice.not.is.null,redPrice.neq.,yellowPrice.not.is.null,yellowPrice.neq.");
@@ -134,23 +115,15 @@ export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => 
       .range(rangeFrom, rangeTo);
 
     if (error) {
-      return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: error.message }) };
+      return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } });
     }
 
-    return {
-      statusCode: 200,
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        products: data ?? [],
-        appliedLimit: limit,
-        sort: sortColumn,
-        direction,
-        page,
-        totalCount: count ?? 0,
-      }),
-    };
+    return NextResponse.json(
+      { products: data ?? [], appliedLimit: limit, sort: sortColumn, direction, page, totalCount: count ?? 0 },
+      { status: 200, headers: { "Cache-Control": "no-store" } },
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error while loading products.";
-    return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: message }) };
+    return NextResponse.json({ error: message }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
-};
+}
