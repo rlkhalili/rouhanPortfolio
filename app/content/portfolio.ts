@@ -13,16 +13,6 @@ export interface Project {
   href?: string;
 }
 
-export interface ProjectDetail {
-  slug: string;
-  eyebrow: string;
-  title: string;
-  summary: string;
-  stack: string;
-  whatYouSee: string;
-  why: string;
-}
-
 export interface HeroContent {
   eyebrow: string;
   headline: string;
@@ -143,20 +133,7 @@ export const projects: Project[] = [
     learning:
       "Playing with different scraping strategies, confronting diversity in robustness, and quickly iterating on a ",
     tech: "Typescript • Node.js • Postgres/Supabase • Drizzle ORM • React",
-    href: "/projects/fashion-product-aggregator",
-  },
-];
-
-export const projectDetails: ProjectDetail[] = [
-  {
-    slug: "fashion-product-aggregator",
-    eyebrow: "Project",
-    title: "Fashion Product Aggregator",
-    summary:
-      "Live view of normalized listings pulled from multiple fashion retailers. Data is stored in Postgres via Supabase; this page queries the shared dataset directly so you can see the aggregated feed without hitting the API.",
-    stack: "TypeScript, Next.js 16, Supabase Postgres",
-    whatYouSee: "Latest products sorted by update time, showing sale/regular price labels, swatches, sizes, and quick media previews.",
-    why: "Load the page → scraper runs → rows land in Supabase Postgres → UI refreshes with the new data. It is the end-to-end loop I would own on the job.",
+    href: "https://aggsite.netlify.app/",
   },
 ];
 

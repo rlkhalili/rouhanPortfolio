@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "clean": "rimraf .next out",
-    "preview:static": "npx serve out",
-    "test:api": "node --test tests/fashion-api-route.test.js"
+    "preview:static": "npx serve out"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
