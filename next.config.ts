@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 // sitenxt/next.config.ts
 const repoBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const outputMode =
+const outputMode: NextConfig["output"] =
   process.env.NEXT_OUTPUT === "standalone" ||
   process.env.NEXT_OUTPUT === "export"
     ? process.env.NEXT_OUTPUT
