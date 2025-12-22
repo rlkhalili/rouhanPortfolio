@@ -2,7 +2,11 @@ import type { NextConfig } from "next";
 
 // sitenxt/next.config.ts
 const repoBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const outputMode = process.env.NEXT_OUTPUT;
+const outputMode =
+  process.env.NEXT_OUTPUT === "standalone" ||
+  process.env.NEXT_OUTPUT === "export"
+    ? process.env.NEXT_OUTPUT
+    : undefined;
 const allowedDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS
   ?.split(",")
   .map((origin) => origin.trim())
